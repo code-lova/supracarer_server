@@ -21,3 +21,13 @@ export const fifteenMinutesFromNow = () => {
     return new Date(now.getTime() + 15 * 60 * 1000); // 15 mins in milliseconds
 };
 
+
+export const fiveMinutesAgo = () => {
+    const now = new Date();
+    return new Date(now.getTime() - 5 * 60 * 1000); // 5 mins in miliseconds
+}
+
+export const oneHourFromNow = () => {
+    const now = new Date();
+    return new Date(now.getTime() + 60 * 60 * 1000); //1 hour in miliseconds
+}

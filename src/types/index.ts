@@ -1,5 +1,6 @@
 import { sessionDocument } from "../models/session.model";
 import { UserDocument } from "../models/user.model";
+import mongoose from "mongoose";
 
 export type UserRole = "admin" | "nurse" | "client";
 
@@ -34,6 +35,23 @@ export type refreshTokenPayload = {
 };
 
 export type accessTokenPayload = {
-  userId: UserDocument["_id"],
-  sessionId: sessionDocument["_id"]
+  userId: mongoose.Types.ObjectId;
+  sessionId: mongoose.Types.ObjectId;
 }
+
+
+
+export type EmailConfig = {
+  host: string;
+  port: number;
+  secure: boolean;
+  auth: {
+    user: string;
+    pass: string;
+  };
+};
+
+export type resetPasswordType = {
+  password: string;
+  resetVerificationCode: string;
+};

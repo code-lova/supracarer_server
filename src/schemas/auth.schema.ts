@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const emailSchema = z.string().email().min(1).max(100).trim();
+export const emailSchema = z.string().email().min(1).max(100).trim();
 const passwordSchema = z
   .string()
   .min(6)
@@ -29,7 +29,11 @@ export const registerSchema = loginSchema
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
-});
-
+  });
 
 export const verificationCodeSchema = z.string().min(1).max(24).trim();
+
+export const resetPasswordSchema = z.object({
+  password: passwordSchema,
+  resetVerificationCode: verificationCodeSchema,
+});

@@ -2,14 +2,18 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET, JWT_REFRESH_SECRET } from "../constants/env";
 import { accessTokenPayload, refreshTokenPayload } from "../types";
 
+
 // Verify and decode the access token
-export const verifyAccessToken = (token: string): accessTokenPayload | null => {
+export const verifyAccessToken = (token: string): { payload: accessTokenPayload | null; error: string | null } => {
   try {
-    return jwt.verify(token, JWT_SECRET) as accessTokenPayload;
+    const payload = jwt.verify(token, JWT_SECRET) as accessTokenPayload;
+    return { payload, error: null }; // Return payload and no error
   } catch (error) {
-    return null; // Return null if token verification fails
+    // Check if the error is an instance of Error
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    return { payload: null, error: errorMessage };
   }
-};
+}
 
 
 // Function to verify and decode refresh token
