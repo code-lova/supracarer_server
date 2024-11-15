@@ -227,7 +227,7 @@ export const verifyEmailService = async (code: string) => {
 export const sendPasswordRestEmail = async (email: string) => {
   //get the user by email
   const user = await User.findOne({ email });
-  appAssert(user, NOT_FOUND, "User not found");
+  appAssert(user, NOT_FOUND, "Please Try again later");
 
   //check email rate limit
   const fiveMinsAgo = fiveMinutesAgo();
@@ -250,7 +250,7 @@ export const sendPasswordRestEmail = async (email: string) => {
   //send verification email
   const url = `${APP_ORIGIN}/password/reset?code=${
     verifyCode._id
-  }&exp${expiresAt.getTime()}`;
+  }&exp=${expiresAt.getTime()}`;
 
   const { subject, text, html } = getPasswordResetTemplate(url);
 
