@@ -83,7 +83,7 @@ export const createAcccount = async (data: CreateAccountParams) => {
     JWT_SECRET,
     {
       audience,
-      expiresIn: "15m",
+      expiresIn: "1m",
     }
   );
 
@@ -127,7 +127,7 @@ export const loginUser = async ({
   // Sign access and refresh token with role-based audience
   const refreshToken = jwt.sign(sessionInfo, JWT_REFRESH_SECRET, {
     audience,
-    expiresIn: "30d",
+    expiresIn: "7d",
   });
 
   // Sign access and access token with role-based audience

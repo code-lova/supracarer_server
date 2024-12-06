@@ -60,15 +60,38 @@ export const loginHandler = catchErrors(async (req, res) => {
 export const logoutHandler = catchErrors(async (req, res) => {
   // Get the access token from cookies
   const accessToken = req.cookies.accessToken as string | undefined;
+  const refreshToken = req.cookies.refreshToken as string | undefined;
 
-  // Verify and decode the access token
-  const { payload } = verifyAccessToken(accessToken || "");
-  appAssert(payload, UNAUTHORIZED, "Invalid or expired token");
+  // Ensure at least one token is present
+  appAssert(
+    accessToken || refreshToken,
+    UNAUTHORIZED,
+    "Unauthorized: No valid tokens provided."
+  );
 
-  // Delete the session using sessionId from the token payload
-  await Session.findByIdAndDelete(payload.sessionId);
+  // Handle session deletion based on access token validity
+  if (accessToken) {
+    try {
+      // Verify and decode the access token
+      const { payload } = verifyAccessToken(accessToken);
+      appAssert(payload, UNAUTHORIZED, "Invalid or expired access token.");
 
-  // Clear auth cookies and return response
+      // Delete the session associated with the access token
+      if (payload?.sessionId) {
+        await Session.findByIdAndDelete(payload.sessionId);
+      }
+    } catch (error) {
+      // Proceed if access token is invalid; fallback to refresh token handling
+      appAssert(
+        refreshToken,
+        UNAUTHORIZED,
+        "Access token invalid and no refresh token provided."
+      );
+    }
+  }
+
+  // Clear authentication cookies to log the user out
+  res.set("Cache-Control", "no-store");
   return clearAuthCookies(res)
     .status(OK)
     .json({ message: "Logout successful" });

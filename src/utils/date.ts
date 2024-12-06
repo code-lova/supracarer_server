@@ -1,3 +1,4 @@
+import { date } from "zod";
 
 
 export const oneYearFromNow = () => {
@@ -16,6 +17,11 @@ export const thirtyDaysFromNow = () => {
     return new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days in milliseconds
 };
 
+export const sevenDaysFromNow = () => {
+    const now = new Date();
+    return new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days in milliseconds
+}
+
 export const fifteenMinutesFromNow = () => {
     const now = new Date();
     return new Date(now.getTime() + 15 * 60 * 1000); // 15 mins in milliseconds
@@ -25,6 +31,11 @@ export const fifteenMinutesFromNow = () => {
 export const fiveMinutesAgo = () => {
     const now = new Date();
     return new Date(now.getTime() - 5 * 60 * 1000); // 5 mins in miliseconds
+}
+
+export const oneMinuteFromNow = () => {
+    const now = new Date();
+    return new Date(now.getTime() + 60 * 1000); //one minute from now
 }
 
 export const oneHourFromNow = () => {
