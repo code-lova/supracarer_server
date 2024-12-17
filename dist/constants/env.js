@@ -9,7 +9,7 @@ const getEnv = (key, defaultValue) => {
     return value;
 };
 exports.MONGO_URI = getEnv("MONGO_URI");
-exports.NODE_ENV = getEnv("NODE_ENV", "development");
+exports.NODE_ENV = getEnv("NODE_ENV", "production");
 exports.PORT = getEnv("PORT", "4004");
 exports.APP_ORIGIN = getEnv("APP_ORIGIN");
 exports.JWT_SECRET = getEnv("JWT_SECRET");
