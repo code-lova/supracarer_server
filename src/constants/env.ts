@@ -2,7 +2,7 @@
 const getEnv = (key: string, defaultValue?: string): string => {
     const value = process.env[key] || defaultValue;
 
-    if(value === undefined){
+    if(value === undefined || value === ''){
         throw new Error(`Missing enviroment variable ${key}`)
     }
 
@@ -11,7 +11,7 @@ const getEnv = (key: string, defaultValue?: string): string => {
 
 
 export const MONGO_URI = getEnv("MONGO_URI");
-export const NODE_ENV = getEnv("NODE_ENV", "production");
+export const NODE_ENV = getEnv("NODE_ENV");
 export const PORT = getEnv("PORT", "4004");
 export const APP_ORIGIN = getEnv("APP_ORIGIN");
 export const JWT_SECRET = getEnv("JWT_SECRET");
