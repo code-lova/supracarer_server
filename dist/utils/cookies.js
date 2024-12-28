@@ -6,7 +6,7 @@ exports.REFRESH_PATH = "/auth/refresh";
 // Set secure cookies unless in development mode
 const secure = process.env.NODE_ENV === "development" ? false : true;
 // Determine sameSite value based on NODE_ENV
-const sameSiteValue = process.env.NODE_ENV === "development" ? "strict" : "none";
+const sameSiteValue = process.env.NODE_ENV === "development" ? "strict" : "lax";
 const defaults = {
     sameSite: sameSiteValue,
     httpOnly: true,
