@@ -19,7 +19,7 @@ const defaults: CookieOptions = {
 // Access token cookie options (expires in 15 minutes)
 export const getAccessTokenCookiesOptions = (): CookieOptions => ({
   ...defaults,
-  path: "/", // Accessible to all routes
+  path: "/",
   expires: fifteenMinutesFromNow(),
 });
 
