@@ -6,11 +6,12 @@ exports.REFRESH_PATH = "/auth/refresh";
 // Set secure cookies unless in development mode
 const secure = process.env.NODE_ENV === "production";
 // Determine sameSite value based on NODE_ENV
-const sameSiteValue = process.env.NODE_ENV === "production" ? "none" : "lax";
+const sameSiteValue = process.env.NODE_ENV === "production" ? "strict" : "lax";
 const defaults = {
     sameSite: sameSiteValue,
     httpOnly: true,
     secure,
+    domain: process.env.NODE_ENV === "production" ? "supracarer.onrender.com" : undefined,
 };
 // Access token cookie options (expires in 15 minutes)
 const getAccessTokenCookiesOptions = () => ({
