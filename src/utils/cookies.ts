@@ -5,10 +5,7 @@ export const REFRESH_PATH = "/auth/refresh";
 
 // Set secure cookies unless in development mode
 const secure = process.env.NODE_ENV === "production";
-
-// Determine sameSite value based on NODE_ENV
 const sameSiteValue: CookieOptions['sameSite'] = process.env.NODE_ENV === "production" ? "none" : "lax";
-
 
 const defaults: CookieOptions = {
   sameSite: sameSiteValue,
