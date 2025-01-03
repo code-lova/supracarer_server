@@ -14,13 +14,16 @@ import sessionRoutes from "./routes/session.route";
 
 const app = express();
 // Define a whitelist of allowed origins
-app.use(
-  cors({
-    origin: APP_ORIGIN,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  })
-);
+
+const corsOptions = {
+  origin: APP_ORIGIN, // Frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Include OPTIONS for preflight
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Set-Cookie"],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
