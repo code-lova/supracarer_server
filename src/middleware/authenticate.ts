@@ -3,18 +3,23 @@ import appAssert from "../utils/appAssert";
 import { UNAUTHORIZED } from "../constants/http";
 import { AppErrorCode } from "../types";
 import { verifyAccessToken } from "../utils/tokens";
-import { accessTokenPayload } from "../types";
 
 const authenticate: RequestHandler = (req, res, next) => {
-  const accessToken = req.cookies.accessToken as string | undefined;
+  // Extract token from Authorization header
+  const authHeader = req.headers.authorization;
+  const authToken = authHeader && authHeader.startsWith("Bearer ") 
+    ? authHeader.split(" ")[1] 
+    : undefined;
+
   appAssert(
-    accessToken,
+    authToken,
     UNAUTHORIZED,
     "Not authorized",
     AppErrorCode.InvalidAccessToken
   );
 
-  const { error, payload } = verifyAccessToken(accessToken);
+  // Verify token
+  const { payload, error } = verifyAccessToken(authToken);
   appAssert(
     payload,
     UNAUTHORIZED,
@@ -22,12 +27,13 @@ const authenticate: RequestHandler = (req, res, next) => {
     AppErrorCode.InvalidAccessToken
   );
 
-  const typedPayload = payload as accessTokenPayload;
+  // Attach user details to request
+  req.user = {
+    id: payload.userId,
+    role: payload.role,
+  };
 
-  req.userId = typedPayload.userId; // This should now work without error
-  req.sessionId = typedPayload.sessionId;
   next();
-
 };
 
 export default authenticate;

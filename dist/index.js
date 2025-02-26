@@ -14,7 +14,6 @@ const http_1 = require("./constants/http");
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const authenticate_1 = __importDefault(require("./middleware/authenticate"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
-const session_route_1 = __importDefault(require("./routes/session.route"));
 const app = (0, express_1.default)();
 // Define a whitelist of allowed origins
 app.use((0, cors_1.default)({
@@ -34,7 +33,7 @@ app.get("/health", (req, res, next) => {
 app.use("/auth", auth_route_1.default);
 //protected routes
 app.use("/user", authenticate_1.default, user_route_1.default);
-app.use("/sessions", authenticate_1.default, session_route_1.default);
+// app.use("/admin", authenticate, authorize("admin"), adminRoutes);
 app.use(errorHandler_1.default);
 app.listen(env_1.PORT, async () => {
     console.log(`Server is live on port ${env_1.PORT} in ${env_1.NODE_ENV} environment`);

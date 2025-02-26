@@ -4,19 +4,20 @@ exports.clearAuthCookies = exports.setAuthCookies = exports.getRefreshTokenCooki
 const date_1 = require("./date");
 exports.REFRESH_PATH = "/auth/refresh";
 // Set secure cookies unless in development mode
-const secure = process.env.NODE_ENV === "production";
-const sameSiteValue = process.env.NODE_ENV === "production" ? "none" : "lax";
+const isProduction = process.env.NODE_ENV === "production";
+const secure = isProduction;
+const sameSiteValue = isProduction ? "none" : "lax";
 const defaults = {
     sameSite: sameSiteValue,
     httpOnly: true,
     secure,
-    domain: process.env.NODE_ENV === "production" ? "supracarer.onrender.com" : undefined,
+    domain: isProduction ? "supracarer.onrender.com" : undefined,
 };
-// Access token cookie options (expires in 15 minutes)
+// Access token cookie options (expires in 1 hour)
 const getAccessTokenCookiesOptions = () => ({
     ...defaults,
     path: "/",
-    expires: (0, date_1.fifteenMinutesFromNow)(),
+    expires: (0, date_1.oneHourFromNow)(),
 });
 exports.getAccessTokenCookiesOptions = getAccessTokenCookiesOptions;
 // Refresh token cookie options (expires in 30 days)

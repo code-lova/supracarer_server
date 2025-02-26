@@ -7,13 +7,20 @@ const appAssert_1 = __importDefault(require("../utils/appAssert"));
 const http_1 = require("../constants/http");
 const tokens_1 = require("../utils/tokens");
 const authenticate = (req, res, next) => {
-    const accessToken = req.cookies.accessToken;
-    (0, appAssert_1.default)(accessToken, http_1.UNAUTHORIZED, "Not authorized", "InvalidAccessToken" /* AppErrorCode.InvalidAccessToken */);
-    const { error, payload } = (0, tokens_1.verifyAccessToken)(accessToken);
+    // Extract token from Authorization header
+    const authHeader = req.headers.authorization;
+    const authToken = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : undefined;
+    (0, appAssert_1.default)(authToken, http_1.UNAUTHORIZED, "Not authorized", "InvalidAccessToken" /* AppErrorCode.InvalidAccessToken */);
+    // Verify token
+    const { payload, error } = (0, tokens_1.verifyAccessToken)(authToken);
     (0, appAssert_1.default)(payload, http_1.UNAUTHORIZED, error === "jwt expired" ? "token expired" : "invalid token", "InvalidAccessToken" /* AppErrorCode.InvalidAccessToken */);
-    const typedPayload = payload;
-    req.userId = typedPayload.userId; // This should now work without error
-    req.sessionId = typedPayload.sessionId;
+    // Attach user details to request
+    req.user = {
+        id: payload.userId,
+        role: payload.role,
+    };
     next();
 };
 exports.default = authenticate;

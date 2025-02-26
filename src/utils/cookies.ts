@@ -1,24 +1,26 @@
 import { CookieOptions, Response } from "express";
-import { fifteenMinutesFromNow, oneMinuteFromNow, sevenDaysFromNow } from "./date";
+import { oneHourFromNow, sevenDaysFromNow } from "./date";
 
 export const REFRESH_PATH = "/auth/refresh";
 
 // Set secure cookies unless in development mode
-const secure = process.env.NODE_ENV === "production";
-const sameSiteValue: CookieOptions['sameSite'] = process.env.NODE_ENV === "production" ? "none" : "lax";
+const isProduction = process.env.NODE_ENV === "production";
+const secure = isProduction;
+const sameSiteValue: CookieOptions['sameSite'] = isProduction ? "none" : "lax";
 
 const defaults: CookieOptions = {
   sameSite: sameSiteValue,
   httpOnly: true,
   secure,
-  domain: process.env.NODE_ENV === "production" ? "supracarer.onrender.com" : undefined,
+  domain: isProduction ? "supracarer.onrender.com" : undefined,
 };
 
-// Access token cookie options (expires in 15 minutes)
+
+// Access token cookie options (expires in 1 hour)
 export const getAccessTokenCookiesOptions = (): CookieOptions => ({
   ...defaults,
   path: "/",
-  expires: fifteenMinutesFromNow(),
+  expires: oneHourFromNow(),
 });
 
 

@@ -1,10 +1,8 @@
-import Session from "../models/session.model";
 import User, { UserDocument } from "../models/user.model";
 import verificationCode from "../models/verificationCode.model";
 import { resetPasswordType, verificationCodeType } from "../types";
 import { fiveMinutesAgo, oneHourFromNow, oneYearFromNow } from "../utils/date";
-import jwt from "jsonwebtoken";
-import { APP_ORIGIN, JWT_REFRESH_SECRET, JWT_SECRET } from "../constants/env";
+import { APP_ORIGIN } from "../constants/env";
 import appAssert from "../utils/appAssert";
 import {
   CONFLICT,
@@ -14,13 +12,17 @@ import {
   UNAUTHORIZED,
 } from "../constants/http";
 import { CreateAccountParams, loginUserParams } from "../types";
-import { decodeToken, verifyRefreshToken } from "../utils/tokens";
 import { sendEmail } from "../config/resend";
 import {
   getPasswordResetTemplate,
   getVerifiedEmailTemplates,
 } from "../utils/emailTemplates";
 import { hashValue } from "../utils/bcrypt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../utils/tokens";
 
 export const createAcccount = async (data: CreateAccountParams) => {
   // Verify the user doesn't already exist
@@ -39,8 +41,6 @@ export const createAcccount = async (data: CreateAccountParams) => {
     password: data.password,
   })) as UserDocument;
 
-  const newUserId = newUser._id;
-
   //create a verification code
   const newVerificationCode = await verificationCode.create({
     userId: newUser._id,
@@ -55,51 +55,13 @@ export const createAcccount = async (data: CreateAccountParams) => {
 
   await sendEmail(newUser.email, subject, text, html);
 
-  //create a session in the system
-  const newSession = await Session.create({
-    newUserId,
-    userAgent: data.userAgent || "unknown",
-  });
-
-  // Set audience to the selected user role
-  const audience = [data.role];
-
-  // Sign access and refresh token with role-based audience
-  const refreshToken = jwt.sign(
-    { sessionId: newSession._id },
-    JWT_REFRESH_SECRET,
-    {
-      audience,
-      expiresIn: "30d",
-    }
-  );
-
-  // Sign access and access token with role-based audience
-  const accessToken = jwt.sign(
-    {
-      newUserId,
-      sessionId: newSession._id,
-    },
-    JWT_SECRET,
-    {
-      audience,
-      expiresIn: "1m",
-    }
-  );
-
-  //return the user & token
+  //return the user
   return {
     newUser: newUser.omitPassword(),
-    accessToken,
-    refreshToken,
   };
 };
 
-export const loginUser = async ({
-  email,
-  password,
-  userAgent,
-}: loginUserParams) => {
+export const loginUser = async ({ email, password }: loginUserParams) => {
   //get the user email
   const user = await User.findOne({ email });
   appAssert(user, UNAUTHORIZED, "Invalid email or password");
@@ -108,42 +70,13 @@ export const loginUser = async ({
   const userIsValid = await user.comparePassword(password);
   appAssert(userIsValid, UNAUTHORIZED, "Invalid email or password");
 
-  //create a session
-  const userId = user._id;
-  const session = await Session.create({
-    userId,
-    userAgent,
-  });
+  const userId = user._id.toString();
+  const role = user.role;
 
-  const sessionInfo = {
-    sessionId: session._id,
-  };
+  const accessToken = generateAccessToken(userId, role);
+  const refreshToken = generateRefreshToken(userId, role);
 
-  //sign our access and refresh token/set audience to role
-
-  // Set audience to the selected user role
-  const audience = user.role;
-
-  // Sign access and refresh token with role-based audience
-  const refreshToken = jwt.sign(sessionInfo, JWT_REFRESH_SECRET, {
-    audience,
-    expiresIn: "7d",
-  });
-
-  // Sign access and access token with role-based audience
-  const accessToken = jwt.sign(
-    {
-      ...sessionInfo,
-      userId,
-    },
-    JWT_SECRET,
-    {
-      audience,
-      expiresIn: "15m",
-    }
-  );
-
-  //return the user & tokens
+  //return the user
   return {
     user: user.omitPassword(),
     accessToken,
@@ -156,45 +89,13 @@ export const refreshUserAccessToken = async (refreshToken: string) => {
   const decoded = verifyRefreshToken(refreshToken);
   appAssert(decoded, UNAUTHORIZED, "Invalid or expired refresh token");
 
-  // Step 2: Check the session associated with the token is active
-  const session = await Session.findById(decoded.sessionId);
-  appAssert(session, UNAUTHORIZED, "Session not found or has expired");
-
-  // Step 3: Find the user associated with the session
-  const user = await User.findById(session.userId);
-  appAssert(user, UNAUTHORIZED, "User not found");
-
-  // Step 4: Generate a new access token
-  const newAccessToken = jwt.sign(
-    {
-      userId: user._id,
-      sessionId: session._id,
-    },
-    JWT_SECRET,
-    {
-      audience: user.role,
-      expiresIn: "15m",
-    }
-  );
-
-  // Step 5: Check if a new refresh token is needed based on issuance date
-  const decodedPayload = decodeToken(refreshToken);
-  const issuanceTime = decodedPayload?.iat ? decodedPayload.iat * 1000 : 0;
-  const isRefreshTokenNearExpiry =
-    Date.now() - issuanceTime > 23 * 24 * 60 * 60 * 1000; // 7 days left for 30-day expiry
-
-  let newRefreshToken;
-  if (isRefreshTokenNearExpiry) {
-    newRefreshToken = jwt.sign({ sessionId: session._id }, JWT_REFRESH_SECRET, {
-      audience: user.role,
-      expiresIn: "30d",
-    });
-  }
+  const newAccessToken = generateAccessToken(decoded.userId, decoded.role);
+  const newRefreshToken = generateRefreshToken(decoded.userId, decoded.role);
 
   // Step 6: Return the new tokens
   return {
     accessToken: newAccessToken,
-    newRefreshToken: newRefreshToken || refreshToken,
+    newRefreshToken: newRefreshToken,
   };
 };
 
@@ -280,20 +181,16 @@ export const resetPasswordService = async ({
   // Hash the new password
   const hashedPassword = await hashValue(password);
 
-
   // valid update the user password
   const updateUser = await User.findByIdAndUpdate(validCode.userId, {
     password: hashedPassword,
   });
-  appAssert(updateUser, INTERNAL_SERVER_ERROR, "Failed to reset password")
+  appAssert(updateUser, INTERNAL_SERVER_ERROR, "Failed to reset password");
 
   //delete the verification code
-  await validCode.deleteOne()
-
-  //delete all sessions on all devices
-  await Session.deleteMany({ userId: updateUser._id }) //delete all session related to this user
+  await validCode.deleteOne();
 
   return {
     user: updateUser.omitPassword(),
-  }
+  };
 };
