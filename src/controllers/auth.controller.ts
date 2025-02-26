@@ -9,8 +9,6 @@ import {
 } from "../services/auth.service";
 import {
   clearAuthCookies,
-  getAccessTokenCookiesOptions,
-  getRefreshTokenCookiesOptions,
   setAuthCookies,
 } from "../utils/cookies";
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
@@ -21,40 +19,35 @@ import {
   resetPasswordSchema,
   verificationCodeSchema,
 } from "../schemas/auth.schema";
-import { verifyAccessToken } from "../utils/tokens";
-import Session from "../models/session.model";
 import appAssert from "../utils/appAssert";
 
 export const registerHandler = catchErrors(async (req, res) => {
   //Validate request
-  const request = registerSchema.parse({
-    ...req.body,
-    userAgent: req.headers["user-agent"],
-  });
+  const request = registerSchema.parse(req.body);
 
   //Call services
-  const { newUser, accessToken, refreshToken } = await createAcccount(request);
+  const { newUser } = await createAcccount(request);
 
   //Return response
-  return setAuthCookies({ res, accessToken, refreshToken })
-    .status(CREATED)
-    .json(newUser);
+  return res.status(CREATED).json({ newUser });
 });
 
 export const loginHandler = catchErrors(async (req, res) => {
   //validate the request
-  const request = loginSchema.parse({
-    ...req.body,
-    userAgent: req.headers["user-agent"],
-  });
+  const request = loginSchema.parse(req.body);
 
   //Call services
-  const { accessToken, refreshToken } = await loginUser(request);
+  const { user, accessToken, refreshToken } = await loginUser(request);
 
-  //return response
-  return setAuthCookies({ res, accessToken, refreshToken })
-    .status(OK)
-    .json({ message: "Login Successful" });
+  // Set cookies
+  // setAuthCookies({ res, accessToken, refreshToken });
+
+  return res.status(OK).json({
+    message: "Login Successful",
+    user,
+    accessToken,
+    refreshToken,
+  });
 });
 
 export const logoutHandler = catchErrors(async (req, res) => {
@@ -69,27 +62,6 @@ export const logoutHandler = catchErrors(async (req, res) => {
     "Unauthorized: No valid tokens provided."
   );
 
-  // Handle session deletion based on access token validity
-  if (accessToken) {
-    try {
-      // Verify and decode the access token
-      const { payload } = verifyAccessToken(accessToken);
-      appAssert(payload, UNAUTHORIZED, "Invalid or expired access token.");
-
-      // Delete the session associated with the access token
-      if (payload?.sessionId) {
-        await Session.findByIdAndDelete(payload.sessionId);
-      }
-    } catch (error) {
-      // Proceed if access token is invalid; fallback to refresh token handling
-      appAssert(
-        refreshToken,
-        UNAUTHORIZED,
-        "Access token invalid and no refresh token provided."
-      );
-    }
-  }
-
   // Clear authentication cookies to log the user out
   res.set("Cache-Control", "no-store");
   return clearAuthCookies(res)
@@ -98,8 +70,8 @@ export const logoutHandler = catchErrors(async (req, res) => {
 });
 
 export const refreshHandler = catchErrors(async (req, res) => {
-  // Get the access token from cookies
-  const refreshToken = req.cookies.refreshToken as string | undefined;
+  // Get the access token from req body
+  const { refreshToken } = req.body;
   appAssert(refreshToken, UNAUTHORIZED, "Missing refresh token");
 
   //call the service
@@ -107,21 +79,13 @@ export const refreshHandler = catchErrors(async (req, res) => {
     refreshToken
   );
 
-  if (newRefreshToken) {
-    res.cookie(
-      "refreshToken",
-      newRefreshToken,
-      getRefreshTokenCookiesOptions()
-    );
-  }
+  // Set new cookies securely
 
-  //Return response
-  return res
-    .status(OK)
-    .cookie("accessToken", accessToken, getAccessTokenCookiesOptions())
-    .json({
-      message: "Access Token Refreshed",
-    });
+  return res.status(OK).json({
+    accessToken,
+    refreshToken: newRefreshToken,
+    message: "Access Token Refreshed",
+  });
 });
 
 export const verifyEmailHandler = catchErrors(async (req, res) => {
@@ -155,7 +119,5 @@ export const resetPasswordHandler = catchErrors(async (req, res) => {
   //call the service
   await resetPasswordService(request);
 
-  return clearAuthCookies(res).status(OK).json({
-    message: "Password Reset Successfully",
-  });
+  return res.status(OK).json({ message: "Password reset successful" });
 });

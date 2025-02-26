@@ -11,7 +11,6 @@ const passwordSchema = z
 export const loginSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
-  userAgent: z.string().optional(),
 });
 
 //extending the loginschem and passing it to registerschema

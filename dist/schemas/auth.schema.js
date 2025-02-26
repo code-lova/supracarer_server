@@ -12,7 +12,6 @@ const passwordSchema = zod_1.z
 exports.loginSchema = zod_1.z.object({
     email: exports.emailSchema,
     password: passwordSchema,
-    userAgent: zod_1.z.string().optional(),
 });
 //extending the loginschem and passing it to registerschema
 exports.registerSchema = exports.loginSchema

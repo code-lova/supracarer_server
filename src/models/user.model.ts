@@ -1,8 +1,9 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { UserRole, UserRoles } from "../types";
 import { compareValue, hashValue } from "../utils/bcrypt";
 
 export interface UserDocument extends mongoose.Document {
+  _id: Types.ObjectId;
   fullname: string;
   email: string;
   phone: string;

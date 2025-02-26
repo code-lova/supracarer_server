@@ -1,6 +1,3 @@
-import { sessionDocument } from "../models/session.model";
-import { UserDocument } from "../models/user.model";
-import mongoose from "mongoose";
 
 export type UserRole = "admin" | "nurse" | "client";
 
@@ -13,6 +10,7 @@ export const enum verificationCodeType {
 
 export const enum AppErrorCode {
     InvalidAccessToken = "InvalidAccessToken",
+    Forbidden = "Forbidden",
 }
 
 export type CreateAccountParams = {
@@ -27,18 +25,17 @@ export type CreateAccountParams = {
 export type loginUserParams = {
   email: string;
   password: string;
-  userAgent?: string;
-};
-
-export type refreshTokenPayload = {
-  sessionId: sessionDocument["_id"],
 };
 
 export type accessTokenPayload = {
-  userId: mongoose.Types.ObjectId;
-  sessionId: mongoose.Types.ObjectId;
+  userId: string;
+  role: UserRole;
 }
 
+export type refreshTokenPayload = {
+  userId: string;
+  role: string;
+};
 
 
 export type EmailConfig = {
