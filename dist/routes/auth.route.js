@@ -6,7 +6,6 @@ const authRoutes = (0, express_1.Router)();
 // Prefix: /auth
 authRoutes.post("/register", auth_controller_1.registerHandler);
 authRoutes.post("/login", auth_controller_1.loginHandler);
-authRoutes.get("/logout", auth_controller_1.logoutHandler);
 authRoutes.post("/refresh", auth_controller_1.refreshHandler);
 authRoutes.get("/email/verify/:code", auth_controller_1.verifyEmailHandler);
 authRoutes.post("/password/forgot", auth_controller_1.sendPasswordResetHandler);

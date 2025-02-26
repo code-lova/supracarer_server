@@ -3,10 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPasswordHandler = exports.sendPasswordResetHandler = exports.verifyEmailHandler = exports.refreshHandler = exports.logoutHandler = exports.loginHandler = exports.registerHandler = void 0;
+exports.resetPasswordHandler = exports.sendPasswordResetHandler = exports.verifyEmailHandler = exports.refreshHandler = exports.loginHandler = exports.registerHandler = void 0;
 const catchErrors_1 = __importDefault(require("../utils/catchErrors"));
 const auth_service_1 = require("../services/auth.service");
-const cookies_1 = require("../utils/cookies");
 const http_1 = require("../constants/http");
 const auth_schema_1 = require("../schemas/auth.schema");
 const appAssert_1 = __importDefault(require("../utils/appAssert"));
@@ -31,18 +30,6 @@ exports.loginHandler = (0, catchErrors_1.default)(async (req, res) => {
         accessToken,
         refreshToken,
     });
-});
-exports.logoutHandler = (0, catchErrors_1.default)(async (req, res) => {
-    // Get the access token from cookies
-    const accessToken = req.cookies.accessToken;
-    const refreshToken = req.cookies.refreshToken;
-    // Ensure at least one token is present
-    (0, appAssert_1.default)(accessToken || refreshToken, http_1.UNAUTHORIZED, "Unauthorized: No valid tokens provided.");
-    // Clear authentication cookies to log the user out
-    res.set("Cache-Control", "no-store");
-    return (0, cookies_1.clearAuthCookies)(res)
-        .status(http_1.OK)
-        .json({ message: "Logout successful" });
 });
 exports.refreshHandler = (0, catchErrors_1.default)(async (req, res) => {
     // Get the access token from req body
