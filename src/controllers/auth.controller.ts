@@ -7,10 +7,6 @@ import {
   sendPasswordRestEmail,
   verifyEmailService,
 } from "../services/auth.service";
-import {
-  clearAuthCookies,
-  setAuthCookies,
-} from "../utils/cookies";
 import { CREATED, OK, UNAUTHORIZED } from "../constants/http";
 import {
   emailSchema,
@@ -50,24 +46,6 @@ export const loginHandler = catchErrors(async (req, res) => {
   });
 });
 
-export const logoutHandler = catchErrors(async (req, res) => {
-  // Get the access token from cookies
-  const accessToken = req.cookies.accessToken as string | undefined;
-  const refreshToken = req.cookies.refreshToken as string | undefined;
-
-  // Ensure at least one token is present
-  appAssert(
-    accessToken || refreshToken,
-    UNAUTHORIZED,
-    "Unauthorized: No valid tokens provided."
-  );
-
-  // Clear authentication cookies to log the user out
-  res.set("Cache-Control", "no-store");
-  return clearAuthCookies(res)
-    .status(OK)
-    .json({ message: "Logout successful" });
-});
 
 export const refreshHandler = catchErrors(async (req, res) => {
   // Get the access token from req body
