@@ -21,8 +21,14 @@ export const registerSchema = loginSchema
       .string()
       .min(2)
       .max(20)
-      .regex(/^\+?\d+$/), //Phone number can start with a + and must contain only numbers
-    confirmPassword: z.string().min(6).max(100),
+      .regex(/^\+?\d+$/, {
+        message:
+          "Phone number can start with a + and must contain only numbers",
+      }),
+    confirmPassword: z
+      .string()
+      .min(8, { message: "Password must not be less than 8 characters" })
+      .max(100),
     role: z.enum(["admin", "nurse", "client"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
